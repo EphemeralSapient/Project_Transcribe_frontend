@@ -23,6 +23,10 @@ jobs:
         with:
             channel: master
             flutter-version: d4772e5 # tag, commit or branch
+
+      - name: Create .env file
+        run: |
+          echo "BASE_URL=${{ secrets.BASE_URL }}" > .env
       
       - name: Install Dependencies
         run: flutter pub get
