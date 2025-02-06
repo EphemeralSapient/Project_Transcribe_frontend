@@ -6,29 +6,16 @@ import 'dart:ui';
 
 import 'package:audio_waveforms/audio_waveforms.dart'
     show AudioWaveforms, RecorderController, WaveStyle;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
 import 'package:overlay_support/overlay_support.dart'
     show showSimpleNotification;
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:transcribe/common/global.dart' as global;
 import 'package:transcribe/common/http.dart';
-
-HttpClient customHttpClient() {
-  HttpClient client = HttpClient();
-  // Accept invalid certificates (DEV only; remove in production)
-  client.badCertificateCallback =
-      (X509Certificate cert, String host, int port) => true;
-  return client;
-}
-
-http.Client getClient() {
-  IOClient ioClient = IOClient(customHttpClient());
-  return ioClient;
-}
 
 class TranscribeScreen extends StatefulWidget {
   final String patientId;
@@ -120,13 +107,15 @@ class _TranscribeScreenState extends State<TranscribeScreen>
     )..repeat(reverse: true);
 
     // Initialize the audio recorder controller
-    _recorderController = RecorderController();
+    if (!kIsWeb) {
+      _recorderController = RecorderController();
+    }
   }
 
   @override
   void dispose() {
     _animationController.dispose();
-    _recorderController.dispose();
+    if (!kIsWeb) _recorderController.dispose();
     super.dispose();
   }
 
@@ -182,8 +171,8 @@ class _TranscribeScreenState extends State<TranscribeScreen>
   Future<void> _sendAudioFileToServer(File audioFile) async {
     debugPrint("Sending audio file to server...");
     try {
-      String uploadUrl = MyHttpClient.baseURL() + '/upload';
-      var client = MyHttpClient.getClient();
+      String uploadUrl = '${MyHttpClient.baseURL()}/upload';
+      var client = MyHttpClient.getClientInstance();
 
       // 1) Upload the audio file
       var request = http.MultipartRequest('POST', Uri.parse(uploadUrl));
@@ -1576,16 +1565,17 @@ class _TranscribeScreenState extends State<TranscribeScreen>
                 const SizedBox(height: 32.0),
                 Expanded(child: _buildWaveformOrInstruction()),
                 const SizedBox(height: 32.0),
-                _buildRecordingButton(),
+                if (!kIsWeb) _buildRecordingButton(),
                 const SizedBox(height: 16.0),
-                Text(
-                  isRecording ? 'Recording...' : 'Start Transcribe Mode',
-                  style: GoogleFonts.lato(
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                if (!kIsWeb)
+                  Text(
+                    isRecording ? 'Recording...' : 'Start Transcribe Mode',
+                    style: GoogleFonts.lato(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
@@ -1703,26 +1693,37 @@ class _TranscribeScreenState extends State<TranscribeScreen>
   }
 
   /// 4) Either show the AudioWaveforms or an instruction Text
+
   Widget _buildWaveformOrInstruction() {
-    if (isRecording) {
-      return AudioWaveforms(
-        recorderController: _recorderController,
-        size: const Size(double.infinity, 200.0),
-        waveStyle: const WaveStyle(
-          waveColor: Colors.white,
-          extendWaveform: true,
-          showMiddleLine: false,
-          scaleFactor: 120, // Make waves bigger
-        ),
-      );
-    } else {
+    if (kIsWeb) {
       return Center(
         child: Text(
-          'Tap the button below to start transcribing the conversation.',
+          'Audio recording & waveform visualization are not supported on web.',
           textAlign: TextAlign.center,
           style: GoogleFonts.lato(fontSize: 18.0, color: Colors.white),
         ),
       );
+    } else {
+      if (isRecording) {
+        return AudioWaveforms(
+          recorderController: _recorderController,
+          size: const Size(double.infinity, 200.0),
+          waveStyle: const WaveStyle(
+            waveColor: Colors.white,
+            extendWaveform: true,
+            showMiddleLine: false,
+            scaleFactor: 120,
+          ),
+        );
+      } else {
+        return Center(
+          child: Text(
+            'Tap the button below to start transcribing the conversation.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.lato(fontSize: 18.0, color: Colors.white),
+          ),
+        );
+      }
     }
   }
 

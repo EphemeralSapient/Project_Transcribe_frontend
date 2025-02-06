@@ -213,7 +213,7 @@ class _DoctorWidgetState extends State<DoctorWidget>
             ),
           ),
           // Main content below the curved AppBar
-          Container(margin: const EdgeInsets.only(top: 200.0), child: tab),
+          Container(margin: const EdgeInsets.only(top: 175.0), child: tab),
         ],
       ),
       // Bottom navigation

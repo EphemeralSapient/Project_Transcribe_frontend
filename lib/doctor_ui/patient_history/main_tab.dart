@@ -119,26 +119,51 @@ Widget buildPatientHistoryTab(Function setState) {
         );
       } else {
         final histories = snapshot.data!;
-        return AnimationLimiter(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
+        return Container(
+          foregroundDecoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.0, 0.1, 0.9, 1.0],
+              colors: [
+                Theme.of(
+                  context,
+                ).scaffoldBackgroundColor, // Fully opaque at top
+                Theme.of(
+                  context,
+                ).scaffoldBackgroundColor.withOpacity(0.0), // Fade out
+                Theme.of(context).scaffoldBackgroundColor.withOpacity(
+                  0.0,
+                ), // Transparent center
+                Theme.of(
+                  context,
+                ).scaffoldBackgroundColor, // Fully opaque at bottom
+              ],
             ),
-            itemCount: histories.length,
-            itemBuilder: (context, index) {
-              final patient = histories[index];
-              return AnimationConfiguration.staggeredList(
-                position: index,
-                delay: const Duration(milliseconds: 100),
-                child: SlideAnimation(
-                  verticalOffset: 50.0,
-                  child: FadeInAnimation(
-                    child: buildPatientHistoryCard(patient),
+          ),
+
+          child: AnimationLimiter(
+            // dart
+            child: ListView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              children: [
+                const SizedBox(height: 50),
+                for (int index = 0; index < histories.length; index++)
+                  AnimationConfiguration.staggeredList(
+                    position: index,
+                    delay: const Duration(milliseconds: 100),
+                    child: SlideAnimation(
+                      verticalOffset: 50.0,
+                      child: FadeInAnimation(
+                        child: buildPatientHistoryCard(histories[index]),
+                      ),
+                    ),
                   ),
-                ),
-              );
-            },
+              ],
+            ),
           ),
         );
       }

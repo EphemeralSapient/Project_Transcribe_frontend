@@ -140,109 +140,130 @@ Widget buildAppointmentsTab(BuildContext context, Function setState) {
         );
       } else {
         final appointments = snapshot.data!;
-        return AnimationLimiter(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: appointments.length,
-            itemBuilder: (context, index) {
-              final appointment = appointments[index];
-              return Dismissible(
-                key: ValueKey(appointment['patientId']), // Unique identifier
-                direction:
-                    DismissDirection.endToStart, // Swipe from right to left
-                // Stylish background
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: const [
-                      Icon(Icons.delete, color: Colors.black),
-                      SizedBox(width: 8.0),
-                      Text(
-                        'Remove',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
+        return Container(
+          foregroundDecoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.0, 0.1, 0.9, 1.0],
+              colors: [
+                Theme.of(
+                  context,
+                ).scaffoldBackgroundColor, // Fully opaque at top
+                Theme.of(
+                  context,
+                ).scaffoldBackgroundColor.withOpacity(0.0), // Fade out
+                Theme.of(context).scaffoldBackgroundColor.withOpacity(
+                  0.0,
+                ), // Transparent center
+                Theme.of(
+                  context,
+                ).scaffoldBackgroundColor, // Fully opaque at bottom
+              ],
+            ),
+          ),
+          child: AnimationLimiter(
+            child: ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                const SizedBox(height: 50),
+                for (int index = 0; index < appointments.length; index++)
+                  Dismissible(
+                    key: ValueKey(appointments[index]['patientId']),
+                    direction: DismissDirection.endToStart,
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: const [
+                          Icon(Icons.delete, color: Colors.black),
+                          SizedBox(width: 8.0),
+                          Text(
+                            'Remove',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: 16.0),
+                        ],
+                      ),
+                    ),
+                    confirmDismiss: (direction) async {
+                      return await showDialog<bool>(
+                            context: context,
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: const Text('Confirm Deletion'),
+                                  content: Text(
+                                    'Are you sure you want to remove the appointment for ${appointments[index]['patientName']}?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(false),
+                                      child: const Text('CANCEL'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        var response = await MyHttpClient.delete(
+                                          "/doctor/appointment-schedules/${appointments[index]['id']}",
+                                        );
+                                        if (response.statusCode != 200) {
+                                          showSimpleNotification(
+                                            Text(
+                                              "Failed to delete appointment | ${response.body}",
+                                            ),
+                                            background: Colors.red,
+                                            leading: const Icon(Icons.error),
+                                          );
+                                        } else {
+                                          showSimpleNotification(
+                                            const Text(
+                                              "Appointment deleted successfully",
+                                            ),
+                                            background: Colors.green,
+                                          );
+                                          Navigator.of(ctx).pop(true);
+                                          setState(() {});
+                                        }
+                                      },
+                                      child: const Text('DELETE'),
+                                    ),
+                                  ],
+                                ),
+                          ) ??
+                          false;
+                    },
+                    onDismissed: (direction) {
+                      setState(() => appointments.removeAt(index));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Appointment deleted for ${appointments[index]['patientName']}.',
+                          ),
+                          duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    child: AnimationConfiguration.staggeredList(
+                      position: index,
+                      delay: const Duration(milliseconds: 100),
+                      child: SlideAnimation(
+                        verticalOffset: 50.0,
+                        child: FadeInAnimation(
+                          child: buildAppointmentCard(
+                            context,
+                            appointments[index],
+                          ),
                         ),
                       ),
-                      SizedBox(width: 16.0),
-                    ],
-                  ),
-                ),
-                // Confirm before actually dismissing
-                confirmDismiss: (direction) async {
-                  return await showDialog<bool>(
-                        context: context,
-                        builder:
-                            (ctx) => AlertDialog(
-                              title: const Text('Confirm Deletion'),
-                              content: Text(
-                                'Are you sure you want to remove the appointment for ${appointment['patientName']}?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(false),
-                                  child: const Text('CANCEL'),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () async {
-                                    // Remove the appointment from the database
-                                    var response = await MyHttpClient.delete(
-                                      "/doctor/appointment-schedules/${appointment['id']}",
-                                    );
-
-                                    if (response.statusCode != 200) {
-                                      showSimpleNotification(
-                                        Text(
-                                          "Failed to delete appointment | ${response.body}",
-                                        ),
-                                        background: Colors.red,
-                                        leading: Icon(Icons.error),
-                                      );
-                                    } else {
-                                      showSimpleNotification(
-                                        Text(
-                                          "Appointment deleted successfully",
-                                        ),
-                                        background: Colors.green,
-                                      );
-                                      Navigator.of(ctx).pop(true);
-                                      setState(() {});
-                                    }
-                                  },
-                                  // () => Navigator.of(ctx).pop(true),
-                                  child: const Text('DELETE'),
-                                ),
-                              ],
-                            ),
-                      ) ??
-                      false;
-                },
-                onDismissed: (direction) {
-                  setState(() => appointments.removeAt(index));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Appointment deleted for ${appointment['patientName']}.',
-                      ),
-                      duration: const Duration(seconds: 2),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                child: AnimationConfiguration.staggeredList(
-                  position: index,
-                  delay: const Duration(milliseconds: 100),
-                  child: SlideAnimation(
-                    verticalOffset: 50.0,
-                    child: FadeInAnimation(
-                      child: buildAppointmentCard(context, appointment),
                     ),
                   ),
-                ),
-              );
-            },
+              ],
+            ),
           ),
         );
       }
