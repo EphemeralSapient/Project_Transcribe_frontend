@@ -234,128 +234,136 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text('Login'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Stack(
-        children: [
-          // Background image
-          SizedBox.expand(
-            child: Image.asset('assets/background.png', fit: BoxFit.cover),
-          ),
-          // Overlay
-          Container(color: Colors.black.withOpacity(0.5)),
-          // Form
-          FadeTransition(
-            opacity: _animation,
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      Text(
-                        // Warm greetings
-                        _hasToken == true
-                            ? "Sign in to proceed"
-                            : 'Welcome back!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32.0,
-                          fontWeight: FontWeight.bold,
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text('Login'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+
+        body: Stack(
+          children: [
+            // Background image
+            SizedBox.expand(
+              child: Image.asset('assets/background.png', fit: BoxFit.cover),
+            ),
+            // Overlay
+            Container(color: Colors.black.withOpacity(0.5)),
+            // Form
+            FadeTransition(
+              opacity: _animation,
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        Text(
+                          // Warm greetings
+                          _hasToken == true
+                              ? "Sign in to proceed"
+                              : 'Welcome back!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 48.0),
-                      TextFormField(
-                        controller: _userIdController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: _buildInputDecoration(
-                          label: 'User ID',
-                          icon: Icons.person,
+                        const SizedBox(height: 48.0),
+                        TextFormField(
+                          controller: _userIdController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: _buildInputDecoration(
+                            label: 'User ID',
+                            icon: Icons.person,
+                          ),
+                          validator:
+                              (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Please enter your user ID'
+                                      : null,
                         ),
-                        validator:
-                            (value) =>
-                                value == null || value.isEmpty
-                                    ? 'Please enter your user ID'
-                                    : null,
-                      ),
-                      const SizedBox(height: 16.0),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: _buildInputDecoration(
-                          label: 'Password',
-                          icon: Icons.lock,
+                        const SizedBox(height: 16.0),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: _buildInputDecoration(
+                            label: 'Password',
+                            icon: Icons.lock,
+                          ),
+                          validator:
+                              (value) =>
+                                  (value == null || value.isEmpty)
+                                      ? 'Please enter your password'
+                                      : (value.length < 6)
+                                      ? 'Password must be at least 6 characters'
+                                      : null,
                         ),
-                        validator:
-                            (value) =>
-                                (value == null || value.isEmpty)
-                                    ? 'Please enter your password'
-                                    : (value.length < 6)
-                                    ? 'Password must be at least 6 characters'
-                                    : null,
-                      ),
-                      const SizedBox(height: 24.0),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            padding: const EdgeInsets.symmetric(vertical: 16.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30.0),
+                        const SizedBox(height: 24.0),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 16.0,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                            ),
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(fontSize: 18.0),
                             ),
                           ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(fontSize: 18.0),
-                          ),
                         ),
-                      ),
-                      const SizedBox(height: 16.0),
-                      _canCheckBiometrics && _hasToken
-                          ? Column(
-                            children: [
-                              const Text(
-                                'Or login using biometric authentication',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                              const SizedBox(height: 8.0),
-
-                              IconButton(
-                                iconSize: 64.0,
-                                icon: const Icon(
-                                  Icons.fingerprint,
-                                  color: Colors.white,
+                        const SizedBox(height: 16.0),
+                        _canCheckBiometrics && _hasToken
+                            ? Column(
+                              children: [
+                                const Text(
+                                  'Or login using biometric authentication',
+                                  style: TextStyle(color: Colors.white),
                                 ),
-                                onPressed:
-                                    _isAuthenticating
-                                        ? null
-                                        : _authenticateWithBiometrics,
-                              ),
-                            ],
-                          )
-                          : Container(),
-                    ],
+                                const SizedBox(height: 8.0),
+
+                                IconButton(
+                                  iconSize: 64.0,
+                                  icon: const Icon(
+                                    Icons.fingerprint,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed:
+                                      _isAuthenticating
+                                          ? null
+                                          : _authenticateWithBiometrics,
+                                ),
+                              ],
+                            )
+                            : Container(),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          // Loading overlay
-          if (_isLoading)
-            Container(
-              color: Colors.black54,
-              child: const Center(child: SpinKitCubeGrid(color: Colors.white)),
-            ),
-        ],
+            // Loading overlay
+            if (_isLoading)
+              Container(
+                color: Colors.black54,
+                child: const Center(
+                  child: SpinKitCubeGrid(color: Colors.white),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

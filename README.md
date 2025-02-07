@@ -69,6 +69,13 @@ pubspec.yaml
 - **Desktop (Windows/Linux):** Use the Flutter desktop build command (e.g., `flutter build windows`).
 
 
+# Demo
+
+Grab the `.apk` file from Github Actions of this repo and use the following 
+
+- **User ID** : Semp
+- **Password** : 12345678
+
 # Contact
 
 You can find me on discord by username of `semp1337`

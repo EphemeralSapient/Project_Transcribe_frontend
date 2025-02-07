@@ -1,28 +1,25 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart' show IOClient;
 import 'package:transcribe/common/global.dart' as global;
 
-class MyHttpClient {
-  static http.Client getClient() {
-    final HttpClient httpClient =
-        HttpClient()
-          ..badCertificateCallback =
-              (X509Certificate cert, String host, int port) => true;
+// Conditional import: if running on the web, use get_client_web.dart; otherwise use get_client_io.dart.
+import 'get_client_io.dart' if (dart.library.html) 'get_client_web.dart';
 
-    return IOClient(httpClient);
+class MyHttpClient {
+  // Uses the platform-specific getClient() function from the imported file.
+  static http.Client getClientInstance() {
+    return getClient();
   }
 
-  static baseURL() {
-    return dotenv.env['BASE_URL'];
+  static String baseURL() {
+    return dotenv.env['BASE_URL'] ?? '';
   }
 
   static Future<http.Response> get(String path) async {
-    final client = getClient();
+    final client = getClientInstance();
     final url = Uri.parse(baseURL() + path);
     final response = await client.get(
       url,
@@ -37,7 +34,7 @@ class MyHttpClient {
   }
 
   static Future<http.Response> delete(String path) async {
-    final client = getClient();
+    final client = getClientInstance();
     final url = Uri.parse(baseURL() + path);
     final response = await client.delete(
       url,
@@ -52,9 +49,8 @@ class MyHttpClient {
     String path,
     Map<String, dynamic> body,
   ) async {
-    final client = getClient();
+    final client = getClientInstance();
     final url = Uri.parse(baseURL() + path);
-    // debugPrint(body.toString());
     final response = await client.post(
       url,
       body: jsonEncode(body),
@@ -71,8 +67,8 @@ class MyHttpClient {
     String path,
     Map<String, dynamic> body,
   ) async {
-    debugPrint("Debugging the damn field : ${jsonEncode(body)}} ");
-    final client = getClient();
+    debugPrint("Debug: ${jsonEncode(body)}");
+    final client = getClientInstance();
     final url = Uri.parse(baseURL() + path);
     final response = await client.put(
       url,

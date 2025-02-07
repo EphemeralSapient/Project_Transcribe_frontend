@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -48,10 +49,6 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const Login(),
         '/dashboard': (context) => const Dashboard(),
       },
-
-      // return null;
-      // Unknown route
-      //return MaterialPageRoute(builder: (_) => UnknownPage());
     );
   }
 }
@@ -84,8 +81,12 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
     });
 
     if (_hasToken) {
-      // Token exists, proceed to biometric auth
-      _authenticateWithBiometrics();
+      // Token exists, proceed to biometric auth only if not on web
+      if (kIsWeb) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      } else {
+        _authenticateWithBiometrics();
+      }
     } else {
       // No token: direct to login
       Navigator.pushReplacementNamed(context, '/login');
@@ -93,33 +94,23 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
   }
 
   Future<void> _authenticateWithBiometrics() async {
-    // If no token, show an error or navigate
-    if (!_hasToken) {
+    if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No valid token found! Please log in.')),
+        const SnackBar(
+          content: Text('Biometric authentication is not supported on web'),
+        ),
       );
       Navigator.pushReplacementNamed(context, '/login');
       return;
     }
-
     try {
-      setState(() {
-        _isAuthenticating = true;
-      });
-
-      final authenticated = await auth.authenticate(
-        localizedReason: 'Please authenticate to continue',
+      setState(() => _isAuthenticating = true);
+      bool authenticated = await auth.authenticate(
+        localizedReason: 'Authenticate to access your account',
         options: const AuthenticationOptions(stickyAuth: true),
       );
-
-      setState(() {
-        _isAuthenticating = false;
-      });
-      debugPrint(
-        "Heres hashToken: $_hasToken and authenticated: $authenticated",
-      );
+      setState(() => _isAuthenticating = false);
       if (authenticated) {
-        // Successfully authenticated
         if (_hasToken) {
           Navigator.pushReplacementNamed(context, '/dashboard');
         } else {
@@ -130,7 +121,6 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
           );
         }
       } else {
-        // Failed biometric auth
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Biometric Authentication Failed!')),
         );
@@ -138,10 +128,7 @@ class _AuthenticationWrapperState extends State<AuthenticationWrapper> {
       }
     } on PlatformException catch (e) {
       debugPrint('Error during authentication: $e');
-      setState(() {
-        _isAuthenticating = false;
-      });
-      // Show message or handle error
+      setState(() => _isAuthenticating = false);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
