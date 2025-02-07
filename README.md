@@ -76,6 +76,10 @@ Grab the `.apk` file from Github Actions of this repo and use the following
 - **User ID** : Semp
 - **Password** : 12345678
 
+**OR**
+
+Try the web version https://semp.live:8000/project-transcribe/#/dashboard
+
 # Contact
 
 You can find me on discord by username of `semp1337`
