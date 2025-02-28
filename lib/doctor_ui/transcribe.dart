@@ -286,7 +286,7 @@ class _TranscribeScreenState extends State<TranscribeScreen>
             _isLoading = false;
           });
           var errorText =
-              'Failed to summarize transcript. Status: ${summarizeResponse.statusCode}';
+              'Failed to summarize transcript. Status: ${summarizeResponse.statusCode} | Body: ${summarizeResponse.body}';
           debugPrint(errorText);
 
           showSimpleNotification(
@@ -343,140 +343,200 @@ class _TranscribeScreenState extends State<TranscribeScreen>
             minChildSize: 0.3,
             initialChildSize: 0.5,
             builder: (context, scrollController) {
-              return ListView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(16.0),
+              return Column(
                 children: [
-                  // Small top drag handle
-                  Center(
-                    child: Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16.0),
+                      children: [
+                        // Small top drag handle
+                        Center(
+                          child: Container(
+                            width: 50,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16.0),
+                        Text(
+                          'Summarized Diagnosis',
+                          style: GoogleFonts.lato(
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16.0),
+                        // Editable fields from summarized data
+                        _buildEditableListTile(
+                          title: 'Summary',
+                          value: _summarizedData!['summary'] ?? '',
+                          icon: Icons.description,
+                          opType: "summary",
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['summary'] = newValue;
+                            });
+                          },
+                        ),
+                        _buildEditableListTile(
+                          title: 'Diagnosis',
+                          value:
+                              _summarizedData!['diagnosis']?.toString() ?? '',
+                          icon: Icons.local_hospital,
+                          opType: "summary",
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['diagnosis'] = newValue;
+                            });
+                          },
+                        ),
+                        _buildEditableListTile(
+                          title: 'Symptoms',
+                          value: _summarizedData!['symptoms']?.toString() ?? '',
+                          icon: Icons.healing,
+                          opType: "summary",
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['symptoms'] = newValue;
+                            });
+                          },
+                        ),
+                        _buildMedicationListTile(
+                          title: 'Medications Prescribed',
+                          medications:
+                              _summarizedData!['medications_prescribed'] is List
+                                  ? List<Map<String, dynamic>>.from(
+                                    _summarizedData!['medications_prescribed'],
+                                  )
+                                  : [], // Convert to proper list of maps
+                          icon: Icons.medication,
+                          onEditComplete: (newMedications) {
+                            setState(() {
+                              _summarizedData!['medications_prescribed'] =
+                                  newMedications;
+                            });
+                          },
+                        ),
+                        _buildEditableListTile(
+                          title: 'Tests Ordered',
+                          value:
+                              _summarizedData!['tests_ordered']?.toString() ??
+                              '',
+                          icon: Icons.science,
+                          opType: "summary",
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['tests_ordered'] = newValue;
+                            });
+                          },
+                        ),
+                        _buildEditableListTile(
+                          title: 'Follow-up Instructions',
+                          value:
+                              _summarizedData!['follow_up_instructions']
+                                  ?.toString() ??
+                              '',
+                          opType: "summary",
+                          icon: Icons.assignment_turned_in,
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['follow_up_instructions'] =
+                                  newValue;
+                            });
+                          },
+                        ),
+                        _buildEditableListTile(
+                          title: 'Allergies',
+                          value:
+                              _summarizedData!['allergies']?.toString() ?? '',
+                          icon: Icons.warning,
+                          opType: "summary",
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['allergies'] = newValue;
+                            });
+                          },
+                        ),
+                        _buildEditableListTile(
+                          title: 'Family History',
+                          value:
+                              _summarizedData!['family_history']?.toString() ??
+                              '',
+                          icon: Icons.family_restroom,
+                          opType: "summary",
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['family_history'] = newValue;
+                            });
+                          },
+                        ),
+                        _buildEditableListTile(
+                          title: 'Lifestyle Recommendations',
+                          value:
+                              _summarizedData!['lifestyle_recommendations']
+                                  ?.toString() ??
+                              '',
+                          opType: "summary",
+                          icon: Icons.thumb_up,
+                          onValueChanged: (newValue) {
+                            setState(() {
+                              _summarizedData!['lifestyle_recommendations'] =
+                                  newValue;
+                            });
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16.0),
-                  Text(
-                    'Summarized Diagnosis',
-                    style: GoogleFonts.lato(
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
+
+                  // Add a persistent save button at the bottom
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12.0,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16.0),
-                  // Editable fields from summarized data
-                  _buildEditableListTile(
-                    title: 'Summary',
-                    value: _summarizedData!['summary'] ?? '',
-                    icon: Icons.description,
-                    opType: "summary",
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['summary'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Diagnosis',
-                    value: _summarizedData!['diagnosis']?.toString() ?? '',
-                    icon: Icons.local_hospital,
-                    opType: "summary",
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['diagnosis'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Symptoms',
-                    value: _summarizedData!['symptoms']?.toString() ?? '',
-                    icon: Icons.healing,
-                    opType: "summary",
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['symptoms'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Medications Prescribed',
-                    value:
-                        _summarizedData!['medications_prescribed']
-                            ?.toString() ??
-                        '',
-                    icon: Icons.medication,
-                    opType: "summary",
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['medications_prescribed'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Tests Ordered',
-                    value: _summarizedData!['tests_ordered']?.toString() ?? '',
-                    icon: Icons.science,
-                    opType: "summary",
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['tests_ordered'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Follow-up Instructions',
-                    value:
-                        _summarizedData!['follow_up_instructions']
-                            ?.toString() ??
-                        '',
-                    opType: "summary",
-                    icon: Icons.assignment_turned_in,
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['follow_up_instructions'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Allergies',
-                    value: _summarizedData!['allergies']?.toString() ?? '',
-                    icon: Icons.warning,
-                    opType: "summary",
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['allergies'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Family History',
-                    value: _summarizedData!['family_history']?.toString() ?? '',
-                    icon: Icons.family_restroom,
-                    opType: "summary",
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['family_history'] = newValue;
-                      });
-                    },
-                  ),
-                  _buildEditableListTile(
-                    title: 'Lifestyle Recommendations',
-                    value:
-                        _summarizedData!['lifestyle_recommendations']
-                            ?.toString() ??
-                        '',
-                    opType: "summary",
-                    icon: Icons.thumb_up,
-                    onValueChanged: (newValue) {
-                      setState(() {
-                        _summarizedData!['lifestyle_recommendations'] =
-                            newValue;
-                      });
-                    },
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _saveSummarizedData(),
+                            icon: const Icon(Icons.save),
+                            label: Text(
+                              'Save Diagnosis',
+                              style: GoogleFonts.lato(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14.0,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               );
@@ -487,11 +547,68 @@ class _TranscribeScreenState extends State<TranscribeScreen>
     );
   }
 
+  /// Save the summarized data to the server
+  Future<void> _saveSummarizedData() async {
+    setState(() {
+      _isLoading = true;
+      _loadingMessage = 'Saving diagnosis...';
+    });
+
+    try {
+      // Prepare the data for saving
+      final Map<String, dynamic> diagnosisData = {
+        'patient_id': widget.patientId,
+        'appointment_id': widget.appointmentId,
+        'diagnosis_data': _summarizedData,
+      };
+
+      final response = await MyHttpClient.post(
+        '/doctor/save-diagnosis',
+        diagnosisData,
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Close the bottom sheet first
+        Navigator.pop(context);
+
+        // Show success notification
+        showSimpleNotification(
+          const Text(
+            'Diagnosis saved successfully!',
+            style: TextStyle(color: Colors.white),
+          ),
+          leading: const Icon(Icons.check_circle, color: Colors.white),
+          background: Colors.green,
+        );
+      } else {
+        throw Exception('Failed to save diagnosis: ${response.body}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      showSimpleNotification(
+        Text(
+          'Error saving diagnosis: $e',
+          style: const TextStyle(color: Colors.white),
+        ),
+        leading: const Icon(Icons.error_outline, color: Colors.white),
+        background: Colors.redAccent,
+      );
+    }
+  }
+
   /// Bottom Sheet for editing a patient's general "History"
   Future<Map<String, dynamic>> fetchPatientHistory(id) async {
     try {
       debugPrint("!!! $id");
       var response = await MyHttpClient.get('/patient/$id/history');
+      debugPrint("response? : ${response.body}");
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
         Map<String, String> finalzied = {};
@@ -588,7 +705,7 @@ class _TranscribeScreenState extends State<TranscribeScreen>
     try {
       // Fetch details asynchronously
       Map<String, dynamic> patientHistory = await fetchPatientHistory(
-        widget.appointmentId,
+        widget.patientId,
       );
 
       // Close the loading indicator
@@ -1776,6 +1893,521 @@ class _TranscribeScreenState extends State<TranscribeScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMedicationListTile({
+    required String title,
+    required List<Map<String, dynamic>> medications,
+    required IconData icon,
+    required Function(List<Map<String, dynamic>>) onEditComplete,
+  }) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      child: ExpansionTile(
+        leading: Icon(icon, color: Colors.blueAccent),
+        title: Text(
+          title,
+          style: GoogleFonts.lato(fontSize: 18.0, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          '${medications.length} medication${medications.length != 1 ? 's' : ''} prescribed',
+          style: GoogleFonts.lato(fontSize: 14.0),
+        ),
+        children: [
+          ...medications.map((med) {
+            // Extract medication data
+            final name = med['medication'] ?? 'Unknown';
+            final dosage = med['dosage'] ?? 'Unspecified';
+            final frequency = med['frequency'] ?? 'Unspecified';
+            final duration = med['duration'] ?? 'Unspecified';
+
+            // Warning check
+            final warningProb =
+                double.tryParse(
+                  med['wrong_medication_probability']?.toString() ?? '0',
+                ) ??
+                0;
+            final warningReason = med['wrong_medication_reason'] ?? '';
+            final hasWarning = warningProb > 0.5;
+
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 4.0,
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: GoogleFonts.lato(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.bold,
+                        color: hasWarning ? Colors.red : Colors.black87,
+                      ),
+                    ),
+                  ),
+                  if (hasWarning)
+                    Tooltip(
+                      message: warningReason,
+                      child: Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange,
+                        size: 20,
+                      ),
+                    ),
+                ],
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dosage: $dosage',
+                    style: GoogleFonts.lato(fontSize: 14.0),
+                  ),
+                  Text(
+                    'Frequency: $frequency',
+                    style: GoogleFonts.lato(fontSize: 14.0),
+                  ),
+                  Text(
+                    'Duration: $duration',
+                    style: GoogleFonts.lato(fontSize: 14.0),
+                  ),
+                  if (hasWarning)
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      margin: const EdgeInsets.only(top: 4.0),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8.0),
+                        border: Border.all(
+                          color: Colors.orange.withOpacity(0.5),
+                        ),
+                      ),
+                      child: Text(
+                        warningReason,
+                        style: GoogleFonts.lato(
+                          fontSize: 12.0,
+                          color: Colors.deepOrange,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit, size: 20),
+                onPressed:
+                    () => _showMedicationEditDialog(med, (updatedMed) {
+                      setState(() {
+                        // Find and replace the medication in the list
+                        final index = medications.indexOf(med);
+                        if (index >= 0) {
+                          medications[index] = updatedMed;
+                          onEditComplete(medications);
+                        }
+                      });
+                    }),
+              ),
+            );
+          }),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.add),
+              label: Text('Add Medication', style: GoogleFonts.lato()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+              ),
+              onPressed:
+                  () => _showMedicationEditDialog({}, (newMed) {
+                    setState(() {
+                      medications.add(newMed);
+                      onEditComplete(medications);
+                    });
+                  }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Add medication edit dialog
+  void _showMedicationEditDialog(
+    Map<String, dynamic> medication,
+    Function(Map<String, dynamic>) onSave,
+  ) {
+    // Create controllers for each field
+    final nameController = TextEditingController(
+      text: medication['medication']?.toString() ?? '',
+    );
+
+    // Default values for dropdowns
+    String selectedDosage = medication['dosage']?.toString() ?? 'Select dosage';
+    String selectedFrequency =
+        medication['frequency']?.toString() ?? 'Select frequency';
+    String selectedDuration =
+        medication['duration']?.toString() ?? 'Select duration';
+
+    // Preserve warning data if it exists
+    final wrongProb = medication['wrong_medication_probability'] ?? 0;
+    final wrongReason = medication['wrong_medication_reason'] ?? '';
+    final alternativeSuggestion =
+        medication['alternative_suggestion']?.toString();
+
+    // Common dosage options
+    final dosageOptions = [
+      'Select dosage',
+      '5mg',
+      '10mg',
+      '20mg',
+      '25mg',
+      '50mg',
+      '75mg',
+      '100mg',
+      '200mg',
+      '250mg',
+      '500mg',
+      '1g',
+      'Other',
+    ];
+
+    // Common frequency options
+    final frequencyOptions = [
+      'Select frequency',
+      'Once daily',
+      'Twice daily',
+      'Three times daily',
+      'Four times daily',
+      'Every 4 hours',
+      'Every 6 hours',
+      'Every 8 hours',
+      'Every 12 hours',
+      'As needed',
+      'Other',
+    ];
+
+    // Common duration options
+    final durationOptions = [
+      'Select duration',
+      '3 days',
+      '5 days',
+      '7 days',
+      '10 days',
+      '14 days',
+      '1 month',
+      '3 months',
+      '6 months',
+      'Ongoing',
+      'Other',
+    ];
+
+    // For custom entry with "Other" option
+    final customDosageController = TextEditingController();
+    final customFrequencyController = TextEditingController();
+    final customDurationController = TextEditingController();
+
+    // Check if the current values exist in our options
+    if (!dosageOptions.contains(selectedDosage) &&
+        selectedDosage != 'Select dosage') {
+      customDosageController.text = selectedDosage;
+      selectedDosage = 'Other';
+    }
+
+    if (!frequencyOptions.contains(selectedFrequency) &&
+        selectedFrequency != 'Select frequency') {
+      customFrequencyController.text = selectedFrequency;
+      selectedFrequency = 'Other';
+    }
+
+    if (!durationOptions.contains(selectedDuration) &&
+        selectedDuration != 'Select duration') {
+      customDurationController.text = selectedDuration;
+      selectedDuration = 'Other';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateLocal) {
+            return AlertDialog(
+              title: const Text('Edit Medication'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Medication name field
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Medication Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+
+                    // Alternative suggestion if available
+                    if (alternativeSuggestion != null &&
+                        alternativeSuggestion.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: InkWell(
+                          onTap: () {
+                            setStateLocal(() {
+                              nameController.text = alternativeSuggestion;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8.0),
+                              border: Border.all(
+                                color: Colors.blue.withOpacity(0.5),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.lightbulb_outline,
+                                  color: Colors.blue,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Suggested: $alternativeSuggestion',
+                                    style: const TextStyle(
+                                      color: Colors.blue,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.touch_app,
+                                  color: Colors.blue,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
+
+                    // Dosage dropdown
+                    const Text(
+                      'Dosage:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      width: double.infinity,
+                      child: DropdownButtonHideUnderline(
+                        child: ButtonTheme(
+                          alignedDropdown: true,
+                          child: DropdownButton<String>(
+                            value: selectedDosage,
+                            isExpanded: true,
+                            items:
+                                dosageOptions.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                            onChanged: (newValue) {
+                              setStateLocal(() {
+                                selectedDosage = newValue!;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Custom dosage field if "Other" is selected
+                    if (selectedDosage == 'Other')
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: TextField(
+                          controller: customDosageController,
+                          decoration: const InputDecoration(
+                            labelText: 'Custom Dosage',
+                            border: OutlineInputBorder(),
+                            hintText: 'Enter custom dosage',
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
+
+                    // Frequency dropdown
+                    const Text(
+                      'Frequency:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      width: double.infinity,
+                      child: DropdownButtonHideUnderline(
+                        child: ButtonTheme(
+                          alignedDropdown: true,
+                          child: DropdownButton<String>(
+                            value: selectedFrequency,
+                            isExpanded: true,
+                            items:
+                                frequencyOptions.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                            onChanged: (newValue) {
+                              setStateLocal(() {
+                                selectedFrequency = newValue!;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Custom frequency field if "Other" is selected
+                    if (selectedFrequency == 'Other')
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: TextField(
+                          controller: customFrequencyController,
+                          decoration: const InputDecoration(
+                            labelText: 'Custom Frequency',
+                            border: OutlineInputBorder(),
+                            hintText: 'Enter custom frequency',
+                          ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 16),
+
+                    // Duration dropdown
+                    const Text(
+                      'Duration:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      width: double.infinity,
+                      child: DropdownButtonHideUnderline(
+                        child: ButtonTheme(
+                          alignedDropdown: true,
+                          child: DropdownButton<String>(
+                            value: selectedDuration,
+                            isExpanded: true,
+                            items:
+                                durationOptions.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                            onChanged: (newValue) {
+                              setStateLocal(() {
+                                selectedDuration = newValue!;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Custom duration field if "Other" is selected
+                    if (selectedDuration == 'Other')
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: TextField(
+                          controller: customDurationController,
+                          decoration: const InputDecoration(
+                            labelText: 'Custom Duration',
+                            border: OutlineInputBorder(),
+                            hintText: 'Enter custom duration',
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('CANCEL'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Determine the final values (either from dropdown or custom)
+                    final finalDosage =
+                        selectedDosage == 'Other'
+                            ? customDosageController.text
+                            : (selectedDosage == 'Select dosage'
+                                ? ''
+                                : selectedDosage);
+
+                    final finalFrequency =
+                        selectedFrequency == 'Other'
+                            ? customFrequencyController.text
+                            : (selectedFrequency == 'Select frequency'
+                                ? ''
+                                : selectedFrequency);
+
+                    final finalDuration =
+                        selectedDuration == 'Other'
+                            ? customDurationController.text
+                            : (selectedDuration == 'Select duration'
+                                ? ''
+                                : selectedDuration);
+
+                    final updatedMedication = {
+                      'medication': nameController.text,
+                      'dosage': finalDosage,
+                      'frequency': finalFrequency,
+                      'duration': finalDuration,
+                      // Preserve the warning flags
+                      'wrong_medication_probability': wrongProb,
+                      'wrong_medication_reason': wrongReason,
+                      'alternative_suggestion': alternativeSuggestion,
+                    };
+
+                    onSave(updatedMedication);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('SAVE'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
