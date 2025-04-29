@@ -133,7 +133,9 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
         token = data['token'];
         role = data['role'];
         name = data['name'];
-        profilePic = data['profile_pic'];
+        profilePic =
+            data['profile_pic'] ??
+            "https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTA4L3Jhd3BpeGVsX29mZmljZV8yOV9hX3Bob3RvX29mX2FfbWlkZGxlX2FnZV9tYWxlX2luZGlhbl9kb2N0b3JfaF8xNjdkY2ExMi0zY2NlLTQ2NDItOTJkYy02M2U2NDA4ZDEwMjAucG5n.png";
 
         // We are done I guess
       } catch (e) {
